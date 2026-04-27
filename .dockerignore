@@ -1,0 +1,10 @@
+inbalance.db
+*.db
+tmp/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.*
+.claude/
+.git/
