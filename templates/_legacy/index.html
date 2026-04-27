@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>inBalance</title>
+  <link rel="stylesheet" href="/static/styles.css?v=9" />
+</head>
+<body>
+
+  <div class="phone-wrap">
+    <div class="app">
+
+      <!-- ── User identity banner ───────────────────── -->
+      <div id="user-banner">
+        <span id="user-greeting"></span>
+        <button id="user-switch" onclick="openUsernameModal()">change</button>
+      </div>
+
+      <!-- ── Username modal ─────────────────────────── -->
+      <div id="username-modal">
+        <div id="username-modal-box">
+          <div id="username-modal-title">Who are you?</div>
+          <p id="username-modal-sub">Your name is used to track your history locally.</p>
+          <input id="username-input" type="text" placeholder="e.g. Sarah" maxlength="40" />
+          <button id="username-confirm" onclick="confirmUsername()">Save</button>
+        </div>
+      </div>
+
+      <!-- ── Screens ─────────────────────────────────── -->
+      <div class="screens">
+
+        <!-- TODAY TAB -->
+        <div class="screen active" id="screen-today">
+
+          <!-- Phase hero -->
+          <div class="hero" id="hero">
+            <svg class="hero-wave" viewBox="0 0 390 260" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path id="hero-wave-path" d="M0,0 L390,0 L390,180 Q300,260 195,230 Q90,200 0,240 Z" fill="currentColor"/>
+            </svg>
+            <div class="hero-content">
+              <div class="hero-top">
+                <span class="app-name">inBalance</span>
+                <button class="icon-btn" id="hero-settings">⚙️</button>
+              </div>
+              <div class="phase-pill" id="hero-phase-pill"></div>
+              <div class="hero-day" id="hero-day"></div>
+              <div class="hero-message" id="hero-message">Log your symptoms to get started.</div>
+            </div>
+          </div>
+
+          <!-- Quick vitals -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">How are you feeling?</span>
+              <span class="section-sub" id="vitals-status">Not logged today</span>
+            </div>
+
+            <div class="vitals-card" id="vitals-card">
+              <div class="vital-row">
+                <span class="vital-label">Energy</span>
+                <div class="emoji-scale" data-signal="ENERGY">
+                  <button class="emoji-btn" data-value="Very Low">😴</button>
+                  <button class="emoji-btn" data-value="Low">🥱</button>
+                  <button class="emoji-btn" data-value="Medium">😐</button>
+                  <button class="emoji-btn" data-value="High">🙂</button>
+                  <button class="emoji-btn" data-value="Very High">⚡</button>
+                </div>
+              </div>
+              <div class="vital-row">
+                <span class="vital-label">Mood</span>
+                <div class="emoji-scale" data-signal="MOOD">
+                  <button class="emoji-btn" data-value="Very Low">😔</button>
+                  <button class="emoji-btn" data-value="Low">😕</button>
+                  <button class="emoji-btn" data-value="Medium">😐</button>
+                  <button class="emoji-btn" data-value="High">🙂</button>
+                  <button class="emoji-btn" data-value="Very High">😄</button>
+                </div>
+              </div>
+              <div class="vital-row">
+                <span class="vital-label">Stress</span>
+                <div class="emoji-scale" data-signal="STRESS">
+                  <button class="emoji-btn" data-value="Low">😌</button>
+                  <button class="emoji-btn" data-value="Moderate">😤</button>
+                  <button class="emoji-btn" data-value="High">😰</button>
+                  <button class="emoji-btn" data-value="Severe">🤯</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Today's picks preview -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Today's Picks</span>
+              <button class="link-btn" onclick="switchTab('guide')">See all →</button>
+            </div>
+            <div id="today-picks" class="picks-list">
+              <div class="picks-placeholder">
+                <span>Log your symptoms to get personalised picks</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Period proximity signal -->
+          <div class="section" id="proximity-section" style="display:none">
+            <div class="proximity-card" id="proximity-card"></div>
+          </div>
+
+          <!-- Cycle insight -->
+          <div class="section" id="cycle-insight-section" style="display:none">
+            <div class="insight-card" id="cycle-insight-card"></div>
+          </div>
+
+        </div>
+
+        <!-- LOG TAB -->
+        <div class="screen" id="screen-log">
+          <div class="screen-header">
+            <h2 class="screen-title">Daily Check-in</h2>
+            <p class="screen-sub">Takes about 30 seconds</p>
+          </div>
+
+          <form id="log-form">
+
+            <!-- Period dates -->
+            <div class="log-section">
+              <div class="log-section-title">🗓 Cycle History</div>
+              <div class="log-field">
+                <label>Period start dates <span class="label-hint">one per line, YYYY-MM-DD</span></label>
+                <textarea id="period-dates" name="period_starts" rows="3"
+                  placeholder="2025-12-01&#10;2025-12-29&#10;2026-01-27"></textarea>
+              </div>
+              <div class="pill-check-row">
+                <label class="pill-check">
+                  <input type="checkbox" id="period-today" name="period_start_logged" />
+                  <span>Period started today</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Physical -->
+            <div class="log-section">
+              <div class="log-section-title">🩸 Physical</div>
+
+              <div class="log-field">
+                <label>Cramps</label>
+                <div class="pill-selector" data-name="CRAMP">
+                  <button type="button" class="pill" data-value="None">None</button>
+                  <button type="button" class="pill" data-value="Mild">Mild</button>
+                  <button type="button" class="pill" data-value="Moderate">Moderate</button>
+                  <button type="button" class="pill" data-value="Severe">Severe</button>
+                  <button type="button" class="pill" data-value="Very Severe">Very Severe</button>
+                </div>
+              </div>
+
+              <div class="log-field">
+                <label>Headache &nbsp;<span class="range-val" id="headache-val">0</span></label>
+                <input type="range" id="headache" name="HEADACHE" min="0" max="10" step="1" value="0"
+                  oninput="document.getElementById('headache-val').textContent = this.value" />
+                <div class="range-labels"><span>None</span><span>Severe</span></div>
+              </div>
+
+              <div class="log-field">
+                <label>Flow</label>
+                <div class="pill-selector" data-name="FLOW">
+                  <button type="button" class="pill" data-value="None">None</button>
+                  <button type="button" class="pill" data-value="Light">Light</button>
+                  <button type="button" class="pill" data-value="Moderate">Moderate</button>
+                  <button type="button" class="pill" data-value="Heavy">Heavy</button>
+                  <button type="button" class="pill" data-value="Very Heavy">Very Heavy</button>
+                </div>
+              </div>
+
+              <div class="log-field">
+                <label>Bloating</label>
+                <div class="pill-selector" data-name="BLOATING">
+                  <button type="button" class="pill" data-value="None">None</button>
+                  <button type="button" class="pill" data-value="Mild">Mild</button>
+                  <button type="button" class="pill" data-value="Moderate">Moderate</button>
+                  <button type="button" class="pill" data-value="Severe">Severe</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mental -->
+            <div class="log-section">
+              <div class="log-section-title">🧠 Mental &amp; Mood</div>
+
+              <div class="log-field">
+                <label>Mood Swings</label>
+                <div class="pill-selector" data-name="MOOD_SWING">
+                  <button type="button" class="pill" data-value="None">None</button>
+                  <button type="button" class="pill" data-value="Mild">Mild</button>
+                  <button type="button" class="pill" data-value="Moderate">Moderate</button>
+                  <button type="button" class="pill" data-value="Severe">Severe</button>
+                </div>
+              </div>
+
+              <div class="log-field">
+                <label>Irritability</label>
+                <div class="pill-selector" data-name="IRRITABILITY">
+                  <button type="button" class="pill" data-value="None">None</button>
+                  <button type="button" class="pill" data-value="Mild">Mild</button>
+                  <button type="button" class="pill" data-value="Moderate">Moderate</button>
+                  <button type="button" class="pill" data-value="Severe">Severe</button>
+                </div>
+              </div>
+
+              <div class="log-field">
+                <label>Brain Fog</label>
+                <div class="pill-selector" data-name="BRAIN_FOG">
+                  <button type="button" class="pill" data-value="None">None</button>
+                  <button type="button" class="pill" data-value="Mild">Mild</button>
+                  <button type="button" class="pill" data-value="Moderate">Moderate</button>
+                  <button type="button" class="pill" data-value="Severe">Severe</button>
+                </div>
+              </div>
+
+              <div class="log-field">
+                <label>Food Cravings</label>
+                <div class="pill-selector" data-name="CRAVINGS">
+                  <button type="button" class="pill" data-value="None">None</button>
+                  <button type="button" class="pill" data-value="Mild">Mild</button>
+                  <button type="button" class="pill" data-value="Moderate">Moderate</button>
+                  <button type="button" class="pill" data-value="Strong">Strong</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sleep -->
+            <div class="log-section">
+              <div class="log-section-title">🌙 Sleep &amp; Extras</div>
+
+              <div class="log-field">
+                <label>Sleep Quality</label>
+                <div class="pill-selector" data-name="SLEEP_QUALITY">
+                  <button type="button" class="pill" data-value="Poor">Poor</button>
+                  <button type="button" class="pill" data-value="Fair">Fair</button>
+                  <button type="button" class="pill" data-value="Good">Good</button>
+                  <button type="button" class="pill" data-value="Very Good">Very Good</button>
+                </div>
+              </div>
+
+              <div class="log-field">
+                <label>Cervical Mucus</label>
+                <div class="pill-selector" data-name="cervical_mucus">
+                  <button type="button" class="pill" data-value="unknown">Unknown</button>
+                  <button type="button" class="pill" data-value="dry">Dry</button>
+                  <button type="button" class="pill" data-value="sticky">Sticky</button>
+                  <button type="button" class="pill" data-value="creamy">Creamy</button>
+                  <button type="button" class="pill" data-value="watery">Watery</button>
+                  <button type="button" class="pill" data-value="eggwhite">Egg White</button>
+                </div>
+              </div>
+
+              <!-- Collapsible extras -->
+              <div class="log-field">
+                <button type="button" class="expand-btn" id="extras-toggle">
+                  + More symptoms (breast tenderness, indigestion)
+                </button>
+              </div>
+              <div class="extras-section" id="extras-section">
+                <div class="log-field">
+                  <label>Breast Tenderness</label>
+                  <div class="pill-selector" data-name="BREAST_TENDERNESS">
+                    <button type="button" class="pill" data-value="None">None</button>
+                    <button type="button" class="pill" data-value="Mild">Mild</button>
+                    <button type="button" class="pill" data-value="Moderate">Moderate</button>
+                    <button type="button" class="pill" data-value="Severe">Severe</button>
+                  </div>
+                </div>
+                <div class="log-field">
+                  <label>Indigestion</label>
+                  <div class="pill-selector" data-name="INDIGESTION">
+                    <button type="button" class="pill" data-value="None">None</button>
+                    <button type="button" class="pill" data-value="Mild">Mild</button>
+                    <button type="button" class="pill" data-value="Moderate">Moderate</button>
+                    <button type="button" class="pill" data-value="Severe">Severe</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="log-submit-wrap">
+              <button type="submit" class="submit-btn" id="submit-btn">
+                <span id="submit-label">Get My Recommendations</span>
+              </button>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- GUIDE TAB -->
+        <div class="screen" id="screen-guide">
+          <div class="screen-header">
+            <h2 class="screen-title">Your Guide</h2>
+            <p class="screen-sub" id="guide-phase-sub">Log symptoms to personalise</p>
+          </div>
+
+          <!-- Domain filter tabs -->
+          <div class="filter-tabs" id="filter-tabs">
+            <button class="filter-tab active" data-domain="all">All</button>
+            <button class="filter-tab" data-domain="exercise">🏃 Exercise</button>
+            <button class="filter-tab" data-domain="nutrition">🥗 Nutrition</button>
+            <button class="filter-tab" data-domain="sleep">🌙 Sleep</button>
+            <button class="filter-tab" data-domain="mental">🧠 Mental</button>
+          </div>
+
+          <div id="guide-loading" class="guide-loading hidden">
+            <div class="spinner"></div><span>Personalising…</span>
+          </div>
+          <div id="guide-empty" class="guide-empty">
+            <div class="empty-icon">✨</div>
+            <p>Log your symptoms in the Check-in tab to get personalised recommendations</p>
+            <button class="submit-btn small" onclick="switchTab('log')">Go to Check-in</button>
+          </div>
+          <div id="guide-content" class="guide-content hidden"></div>
+        </div>
+
+        <!-- CYCLE TAB -->
+        <div class="screen" id="screen-cycle">
+          <div class="screen-header">
+            <h2 class="screen-title">Your Cycle</h2>
+            <p class="screen-sub">Predictions &amp; fertility</p>
+          </div>
+          <div id="cycle-content">
+            <div class="guide-empty">
+              <div class="empty-icon">🌙</div>
+              <p>Add your period dates in the Check-in tab to see your cycle predictions</p>
+              <button class="submit-btn small" onclick="switchTab('log')">Add dates</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── Error bar ───────────────────────────────── -->
+      <div id="error-bar" class="error-bar hidden"></div>
+
+      <!-- ── Bottom Nav ──────────────────────────────── -->
+      <nav class="bottom-nav">
+        <button class="nav-btn active" data-tab="today">
+          <span class="nav-icon">☀️</span>
+          <span class="nav-label">Today</span>
+        </button>
+        <button class="nav-btn" data-tab="log">
+          <span class="nav-icon">✏️</span>
+          <span class="nav-label">Check-in</span>
+        </button>
+        <button class="nav-btn" data-tab="guide">
+          <span class="nav-icon">✨</span>
+          <span class="nav-label">Guide</span>
+        </button>
+        <button class="nav-btn" data-tab="cycle">
+          <span class="nav-icon">🌙</span>
+          <span class="nav-label">Cycle</span>
+        </button>
+      </nav>
+
+    </div>
+  </div>
+
+  <script src="/static/app.js?v=9"></script>
+</body>
+</html>

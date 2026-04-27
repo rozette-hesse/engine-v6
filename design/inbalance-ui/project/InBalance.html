@@ -1,0 +1,1088 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>InBalance — redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root{
+    /* paper + ink — warm, slightly chalky */
+    --paper:       oklch(97.8% 0.008 80);
+    --paper-2:     oklch(95.5% 0.010 78);
+    --paper-3:     oklch(92.8% 0.012 76);
+    --ink:         oklch(22%   0.015 70);
+    --ink-2:       oklch(38%   0.012 72);
+    --ink-3:       oklch(55%   0.010 74);
+    --ink-4:       oklch(72%   0.008 76);
+    --rule:        oklch(88%   0.012 76);
+    --rule-2:      oklch(82%   0.014 76);
+
+    /* phase accents — all chroma 0.08, lightness 55% */
+    --menstrual:   oklch(55% 0.11 28);   /* iron rust  */
+    --follicular: oklch(60% 0.09 145);  /* sage       */
+    --ovulatory:  oklch(62% 0.10 75);   /* ochre      */
+    --luteal:     oklch(52% 0.08 320);  /* plum       */
+
+    --accent: var(--luteal);
+    --accent-tint: color-mix(in oklch, var(--accent) 14%, var(--paper));
+    --accent-ink:  color-mix(in oklch, var(--accent) 75%, var(--ink));
+
+    --serif: "Instrument Serif", "Times New Roman", serif;
+    --sans:  "Inter", ui-sans-serif, system-ui, sans-serif;
+    --mono:  "JetBrains Mono", ui-monospace, monospace;
+
+    --radius: 2px;
+    --radius-l: 6px;
+
+    --phone-shadow-outer: #0d0c0a;
+    --phone-shadow-inner: #2b2925;
+  }
+
+  /* ---- Palette B · cooler bone + saturated accents ---- */
+  body[data-palette="bone"]{
+    --paper:     oklch(98% 0.004 95);
+    --paper-2:   oklch(95.5% 0.005 95);
+    --paper-3:   oklch(92% 0.007 95);
+    --ink:       oklch(18% 0.008 260);
+    --ink-2:     oklch(34% 0.008 260);
+    --ink-3:     oklch(52% 0.007 260);
+    --ink-4:     oklch(70% 0.006 260);
+    --rule:      oklch(88% 0.006 260);
+    --rule-2:    oklch(82% 0.008 260);
+    --menstrual: oklch(54% 0.16 22);
+    --follicular:oklch(56% 0.14 155);
+    --ovulatory: oklch(68% 0.15 78);
+    --luteal:    oklch(48% 0.14 310);
+  }
+
+  /* ---- Palette C · deep editorial (dark) ---- */
+  body[data-palette="deep"]{
+    --paper:     oklch(20% 0.012 70);
+    --paper-2:   oklch(24% 0.014 70);
+    --paper-3:   oklch(28% 0.015 68);
+    --ink:       oklch(94% 0.012 80);
+    --ink-2:     oklch(80% 0.012 80);
+    --ink-3:     oklch(62% 0.010 78);
+    --ink-4:     oklch(48% 0.010 76);
+    --rule:      oklch(32% 0.014 70);
+    --rule-2:    oklch(38% 0.015 70);
+    --menstrual: oklch(68% 0.14 28);
+    --follicular:oklch(72% 0.12 145);
+    --ovulatory: oklch(76% 0.13 78);
+    --luteal:    oklch(66% 0.11 318);
+    --phone-shadow-outer:#070604;
+    --phone-shadow-inner:#1a1714;
+  }
+  *{box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  html,body{margin:0;padding:0;background:#1a1916;color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+  button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+  input,textarea,select{font:inherit;color:inherit}
+  /* app stage */
+  .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;gap:40px}
+  .stage-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .stage-label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:6px}
+
+  /* phone */
+  .phone{
+    width:390px;height:844px;
+    background:var(--paper);
+    border-radius:48px;
+    border:1px solid #000;
+    box-shadow:
+      0 0 0 10px var(--phone-shadow-outer),
+      0 0 0 11px var(--phone-shadow-inner),
+      0 40px 80px -20px rgba(0,0,0,.55);
+    overflow:hidden;
+    position:relative;
+    color:var(--ink);
+    display:flex;flex-direction:column;
+  }
+  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:120px;height:32px;background:#000;border-radius:20px;z-index:50}
+  .status{position:relative;z-index:40;display:flex;justify-content:space-between;align-items:center;padding:16px 28px 4px;font-family:var(--sans);font-weight:500;font-size:13px}
+  .status .r{display:flex;gap:6px;align-items:center}
+  .status svg{display:block}
+
+  .screen{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;scrollbar-width:none}
+  .screen::-webkit-scrollbar{display:none}
+
+  /* tab bar */
+  .tabs{position:absolute;left:0;right:0;bottom:0;background:color-mix(in oklch, var(--paper) 85%, transparent);backdrop-filter:blur(20px);border-top:1px solid var(--rule);display:grid;grid-template-columns:repeat(4,1fr);padding:10px 12px 28px}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;color:var(--ink-3);font-size:10px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+  .tab.active{color:var(--ink)}
+  .tab svg{width:20px;height:20px;stroke-width:1.4}
+  .tab-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);margin-top:2px;opacity:0;transition:opacity .2s}
+  .tab.active .tab-dot{opacity:1}
+
+  /* typographic primitives */
+  .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  .display{font-family:var(--serif);font-weight:400;letter-spacing:-.01em;line-height:1.02;color:var(--ink)}
+  .serif{font-family:var(--serif);font-weight:400}
+  .italic{font-style:italic}
+  .label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+  .hairline{height:1px;background:var(--rule);width:100%}
+  .hairline-thick{height:1px;background:var(--ink);width:100%}
+
+  /* header */
+  .hdr{padding:10px 24px 0;display:flex;justify-content:space-between;align-items:center}
+  .hdr .logo{display:flex;align-items:center;gap:8px}
+  .hdr .logo-mark{width:22px;height:22px;position:relative;color:var(--ink);display:flex;align-items:center;justify-content:center}
+  .hdr .logo-mark svg{width:100%;height:100%;display:block}
+  .hdr .brand{font-family:var(--serif);font-size:18px;letter-spacing:.01em}
+  .hdr .brand em{font-style:italic;color:var(--accent)}
+
+  .page{padding:18px 24px 120px}
+
+  /* ===== TODAY ===== */
+  .today-head{padding-top:6px}
+  .today-date{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px}
+  .today-date .d{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+  .today-date .cd{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--accent-ink)}
+
+  .phase-card{position:relative;padding:22px 0 28px;border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);margin-bottom:22px}
+  .phase-card .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .phase-card .ph-name{font-family:var(--serif);font-size:44px;line-height:1;color:var(--ink)}
+  .phase-card .ph-name em{font-style:italic}
+  .phase-card .ph-day{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ink-3);margin-top:6px;text-transform:uppercase}
+  .phase-card .ph-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--accent-ink);text-transform:uppercase;padding:6px 10px;border:1px solid var(--accent);border-radius:999px;background:var(--accent-tint);white-space:nowrap}
+  .phase-card .ph-tag .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .phase-card .prose{margin-top:18px;font-family:var(--serif);font-size:19px;line-height:1.38;color:var(--ink-2);letter-spacing:.005em;text-wrap:pretty}
+  .phase-card .prose em{font-style:italic;color:var(--ink)}
+  .phase-card .meta{display:flex;gap:20px;margin-top:16px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+  .phase-card .meta b{color:var(--ink);font-weight:500}
+
+  /* confidence bar */
+  .confidence{margin-top:14px;display:flex;align-items:center;gap:10px}
+  .conf-track{flex:1;height:2px;background:var(--rule);position:relative}
+  .conf-fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent)}
+  .conf-label{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase}
+
+  /* section headers */
+  .sec-h{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 12px}
+  .sec-h .t{font-family:var(--serif);font-size:22px;color:var(--ink)}
+  .sec-h .t em{font-style:italic}
+  .sec-h .a{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+
+  /* guidance rows */
+  .guide-list{border-top:1px solid var(--rule)}
+  .guide-row{display:grid;grid-template-columns:28px 1fr auto;gap:14px;padding:16px 0;border-bottom:1px solid var(--rule);align-items:start}
+  .guide-row .num{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-3);padding-top:3px}
+  .guide-row .body{display:flex;flex-direction:column;gap:4px}
+  .guide-row .kind{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink)}
+  .guide-row .title{font-family:var(--serif);font-size:19px;line-height:1.2;color:var(--ink)}
+  .guide-row .why{font-size:13px;color:var(--ink-3);line-height:1.45;margin-top:2px}
+  .guide-row .arrow{color:var(--ink-3);padding-top:4px}
+
+  /* pulse (one-tap check-in) */
+  .pulse{margin-top:24px;border:1px solid var(--rule);border-radius:var(--radius-l);padding:18px;background:var(--paper-2)}
+  .pulse .h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .pulse .q{font-family:var(--serif);font-size:18px}
+  .pulse .h .t{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+  .pulse .opts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .pulse .opt{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border:1px solid var(--rule-2);border-radius:var(--radius);background:var(--paper);font-family:var(--serif);font-size:20px;color:var(--ink-2);transition:all .15s}
+  .pulse .opt:hover{border-color:var(--ink-3)}
+  .pulse .opt.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .pulse .legend{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4)}
+
+  /* phase map (today) small */
+  .ribbon{margin-top:22px}
+  .ribbon-track{display:flex;height:6px;border:1px solid var(--ink);border-radius:3px;overflow:hidden}
+  .ribbon-seg{flex:1;position:relative}
+  .ribbon-seg.m{background:var(--menstrual)}
+  .ribbon-seg.f{background:var(--follicular)}
+  .ribbon-seg.o{background:var(--ovulatory)}
+  .ribbon-seg.l{background:var(--luteal)}
+  .ribbon-seg span{opacity:.35}
+  .ribbon-marker{position:absolute;top:-5px;width:2px;height:16px;background:var(--ink)}
+  .ribbon-labels{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+
+  /* ===== CHECK-IN ===== */
+  .ci-hero{padding-top:4px;margin-bottom:22px}
+  .ci-hero h1{font-family:var(--serif);font-size:36px;line-height:1.05;margin:8px 0 6px;font-weight:400}
+  .ci-hero h1 em{font-style:italic;color:var(--accent-ink)}
+  .ci-hero p{color:var(--ink-3);font-size:14px;max-width:30ch}
+
+  .ci-group{padding:18px 0;border-top:1px solid var(--rule)}
+  .ci-group.first{border-top:1px solid var(--ink)}
+  .ci-group .gh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+  .ci-group .gl{font-family:var(--serif);font-size:20px}
+  .ci-group .gs{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{padding:8px 13px;border:1px solid var(--rule-2);border-radius:999px;background:var(--paper);font-size:13px;color:var(--ink-2);transition:all .12s;line-height:1;display:inline-flex;align-items:center;gap:6px}
+  .chip:hover{border-color:var(--ink-3)}
+  .chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .chip.on .dotc{background:var(--paper)}
+  .chip .dotc{width:5px;height:5px;border-radius:50%;background:var(--ink-4)}
+
+  /* scale row */
+  .scale{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .scale .s{aspect-ratio:1.5/1;display:flex;align-items:center;justify-content:center;border:1px solid var(--rule-2);border-radius:var(--radius);font-family:var(--serif);font-size:18px;color:var(--ink-2)}
+  .scale .s.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .scale-legend{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4)}
+
+  .ci-submit{position:sticky;bottom:80px;margin:24px -24px -120px;padding:16px 24px 28px;background:linear-gradient(to top, var(--paper) 60%, transparent);display:flex;gap:10px}
+  .btn-primary{flex:1;background:var(--ink);color:var(--paper);padding:16px;border-radius:var(--radius-l);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn-ghost{padding:16px 18px;border:1px solid var(--rule-2);border-radius:var(--radius-l);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+
+  /* ===== GUIDE ===== */
+  .guide-hero{padding-top:4px}
+  .guide-hero .k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+  .guide-hero h1{font-family:var(--serif);font-size:32px;line-height:1.05;margin:6px 0 0;font-weight:400}
+  .guide-hero h1 em{font-style:italic}
+
+  .plan{margin-top:20px;border-top:1px solid var(--ink)}
+  .plan-item{display:grid;grid-template-columns:80px 1fr auto;gap:12px;padding:18px 0;border-bottom:1px solid var(--rule);align-items:center}
+  .plan-item .cat{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+  .plan-item .cat .sm{display:block;color:var(--accent-ink);margin-top:4px;font-size:9px}
+  .plan-item .title{font-family:var(--serif);font-size:20px;line-height:1.2}
+  .plan-item .sub{color:var(--ink-3);font-size:12.5px;margin-top:3px;line-height:1.4}
+  .plan-item .check{width:22px;height:22px;border-radius:50%;border:1px solid var(--ink);display:flex;align-items:center;justify-content:center;color:transparent;transition:all .18s}
+  .plan-item.done .check{background:var(--ink);color:var(--paper)}
+  .plan-item.done .title{color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:.5px}
+
+  /* essays / for this phase */
+  .essays{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--rule)}
+  .essay{padding:16px 0;border-bottom:1px solid var(--rule);display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center}
+  .essay .img{width:56px;height:56px;background:var(--paper-3);border:1px solid var(--rule);border-radius:var(--radius);position:relative;overflow:hidden}
+  .essay .img::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 6px, var(--rule-2) 6px 7px)}
+  .essay .img span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:var(--ink-3);letter-spacing:.05em;background:color-mix(in oklch, var(--paper-3) 80%, transparent)}
+  .essay .title{font-family:var(--serif);font-size:17px;line-height:1.2}
+  .essay .meta{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:3px}
+  .essay .time{font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+
+  /* ===== CYCLE ===== */
+  .cycle-head{padding-top:4px;margin-bottom:14px}
+  .cycle-head h1{font-family:var(--serif);font-size:32px;font-weight:400;margin:6px 0 2px;line-height:1.05}
+  .cycle-head h1 em{font-style:italic}
+  .cycle-head p{color:var(--ink-3);font-size:13px}
+
+  .cyc-ribbon{margin-top:20px;border-top:1px solid var(--ink);padding-top:18px}
+  .cyc-ribbon .rb-h{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+  .cyc-ribbon .rb-track{position:relative;height:44px;border-radius:3px;overflow:visible}
+  .rb-bg{position:absolute;inset:0;display:flex;border:1px solid var(--ink);border-radius:3px;overflow:hidden}
+  .rb-bg .s{height:100%;opacity:.85}
+  .rb-bg .s.m{background:var(--menstrual)}
+  .rb-bg .s.f{background:var(--follicular)}
+  .rb-bg .s.o{background:var(--ovulatory)}
+  .rb-bg .s.l{background:var(--luteal)}
+  .rb-bg .s span{display:block;padding:6px 8px;font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);mix-blend-mode:normal}
+  .rb-marker{position:absolute;top:-8px;bottom:-8px;width:2px;background:var(--ink);z-index:3}
+  .rb-marker::after{content:"";position:absolute;top:-5px;left:-3px;width:8px;height:8px;background:var(--ink);border-radius:50%}
+  .rb-fwindow{position:absolute;top:-4px;bottom:-4px;border:1.5px dashed var(--ink);border-radius:3px;z-index:2;background:repeating-linear-gradient(-45deg, transparent 0 4px, color-mix(in oklch, var(--ink) 8%, transparent) 4px 5px)}
+  .rb-days{display:flex;justify-content:space-between;margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+
+  .pred{border-top:1px solid var(--rule);padding:20px 0;margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .pred .cell .k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase}
+  .pred .cell .v{font-family:var(--serif);font-size:24px;margin-top:4px;line-height:1.1}
+  .pred .cell .v em{font-style:italic}
+  .pred .cell .sub{font-family:var(--mono);font-size:10px;color:var(--ink-3);margin-top:6px;letter-spacing:.06em}
+
+  .stats{border-top:1px solid var(--rule);padding-top:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:6px}
+  .stats .c .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase}
+  .stats .c .v{font-family:var(--serif);font-size:22px;line-height:1;margin-top:6px}
+  .stats .c .t{font-family:var(--mono);font-size:9px;color:var(--ink-4);letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
+
+  .patterns{border-top:1px solid var(--rule);padding-top:18px;margin-top:22px}
+  .pattern{display:grid;grid-template-columns:48px 1fr auto;gap:12px;padding:12px 0;border-bottom:1px dotted var(--rule);align-items:center}
+  .pattern .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink)}
+  .pattern .body{font-family:var(--serif);font-size:15px;line-height:1.35;color:var(--ink-2)}
+  .pattern .body em{font-style:italic;color:var(--ink)}
+  .pattern .d{font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+
+  /* ===== ONBOARDING / WELCOME ===== */
+  .wl{padding:40px 28px 120px;min-height:100%;display:flex;flex-direction:column}
+  .wl .mark{width:64px;height:64px;position:relative;margin-bottom:auto;color:var(--ink);display:flex;align-items:center;justify-content:center}
+  .wl .mark svg{width:100%;height:100%;display:block}
+  .wl h1{font-family:var(--serif);font-size:56px;line-height:.98;margin:28px 0 18px;font-weight:400;letter-spacing:-.01em}
+  .wl h1 em{font-style:italic;color:var(--accent-ink)}
+  .wl p{font-family:var(--serif);font-size:20px;line-height:1.32;color:var(--ink-2);max-width:26ch}
+  .wl .tenets{margin-top:auto;margin-bottom:30px}
+  .wl .tenet{display:grid;grid-template-columns:24px 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--rule);align-items:baseline}
+  .wl .tenet .n{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-3)}
+  .wl .tenet .t{font-family:var(--serif);font-size:16px;line-height:1.25}
+  .wl .cta{display:flex;gap:10px;align-items:stretch}
+  .wl .cta .btn-primary{flex:1}
+
+  /* Tweaks panel */
+  .tw{position:fixed;right:24px;bottom:24px;width:300px;background:var(--paper);border:1px solid var(--ink);border-radius:8px;padding:16px;z-index:100;box-shadow:0 20px 40px -10px rgba(0,0,0,.4);display:none;font-family:var(--sans)}
+  .tw.on{display:block}
+  .tw h3{font-family:var(--serif);font-size:18px;margin:0 0 10px;font-weight:400}
+  .tw .row{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid var(--rule)}
+  .tw .row:first-of-type{border-top:0}
+  .tw .row .k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+  .tw .seg{display:flex;gap:4px;flex-wrap:wrap}
+  .tw .seg button{padding:6px 10px;border:1px solid var(--rule-2);border-radius:3px;font-size:11px;color:var(--ink-2);font-family:var(--mono);letter-spacing:.05em}
+  .tw .seg button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .tw input[type="range"]{width:100%}
+
+  /* Utility animation */
+  .fade-in{animation:f .45s ease both}
+  @keyframes f { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+  @media (max-width: 900px) {
+    .stage{flex-direction:column;padding:16px;gap:24px}
+    .phone{transform:scale(.96);transform-origin:top center}
+  }
+</style>
+</head>
+<body>
+
+<template id="__bundler_thumbnail" data-bg-color="#1a1916">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#1a1916"/>
+    <g transform="translate(600 380) scale(8)" fill="none" stroke="#f4efe6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M-18 14 H 18" />
+      <path d="M0 14 C -5 6, -5 -4, 0 -14 C 5 -4, 5 6, 0 14 Z" />
+      <path d="M0 14 C -10 10, -16 2, -16 -6 C -8 -4, -2 4, 0 14 Z" />
+      <path d="M0 14 C 10 10, 16 2, 16 -6 C 8 -4, 2 4, 0 14 Z" />
+      <circle cx="0" cy="-16" r="1.6" fill="#f4efe6" stroke="none"/>
+    </g>
+    <text x="600" y="720" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="42" fill="#f4efe6">inBalance</text>
+  </svg>
+</template>
+
+<div class="stage" id="stage">
+  <!-- phones injected here -->
+</div>
+
+<!-- Tweaks panel -->
+<div class="tw" id="tweaks">
+  <h3>Tweaks</h3>
+  <div class="row">
+    <span class="k">Palette</span>
+    <div class="seg" id="tw-palette">
+      <button data-v="warm" class="on">A · warm paper</button>
+      <button data-v="bone">B · cool bone</button>
+      <button data-v="deep">C · deep editorial</button>
+    </div>
+  </div>
+  <div class="row">
+    <span class="k">Cycle day</span>
+    <input type="range" id="tw-day" min="1" max="28" value="21" />
+    <span class="k" id="tw-day-label" style="color:var(--ink)"></span>
+  </div>
+  <div class="row">
+    <span class="k">Accent warmth</span>
+    <div class="seg" id="tw-accent">
+      <button data-v="phase" class="on">phase</button>
+      <button data-v="rust">rust</button>
+      <button data-v="sage">sage</button>
+      <button data-v="ochre">ochre</button>
+      <button data-v="plum">plum</button>
+      <button data-v="ink">ink-only</button>
+    </div>
+  </div>
+  <div class="row">
+    <span class="k">Type pairing</span>
+    <div class="seg" id="tw-type">
+      <button data-v="instrument" class="on">Instrument × Inter</button>
+      <button data-v="fraunces">Fraunces × Inter</button>
+      <button data-v="plex">IBM Plex Serif × Sans</button>
+    </div>
+  </div>
+  <div class="row">
+    <span class="k">Density</span>
+    <div class="seg" id="tw-density">
+      <button data-v="editorial" class="on">editorial</button>
+      <button data-v="compact">compact</button>
+    </div>
+  </div>
+  <div class="row">
+    <span class="k">Show</span>
+    <div class="seg" id="tw-show">
+      <button data-v="all" class="on">all screens</button>
+      <button data-v="today">today</button>
+      <button data-v="checkin">check-in</button>
+      <button data-v="guide">guide</button>
+      <button data-v="cycle">cycle</button>
+      <button data-v="welcome">welcome</button>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="tweak-defaults">
+/*EDITMODE-BEGIN*/{
+  "cycleDay": 1,
+  "accent": "ochre",
+  "type": "fraunces",
+  "density": "compact",
+  "show": "all",
+  "palette": "warm"
+}/*EDITMODE-END*/
+</script>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect, useMemo } = React;
+
+// ----- data -----
+const CYCLE_LEN = 28;
+const PERIOD_LEN = 5;
+const PHASES = [
+  { key:"menstrual",  name:"Menstrual",  start:1,  end:5,  color:"var(--menstrual)",  seg:"m" },
+  { key:"follicular", name:"Follicular", start:6,  end:13, color:"var(--follicular)", seg:"f" },
+  { key:"ovulatory",  name:"Ovulatory",  start:14, end:16, color:"var(--ovulatory)",  seg:"o" },
+  { key:"luteal",     name:"Luteal",     start:17, end:28, color:"var(--luteal)",     seg:"l" },
+];
+const phaseForDay = (d) => PHASES.find(p => d >= p.start && d <= p.end) || PHASES[0];
+
+const PHASE_COPY = {
+  menstrual: {
+    body: ["Energy is at its lowest; rest is productive.","Iron and magnesium stores are dropping.","Pain tolerance may be reduced."],
+    prose: <>The body is <em>shedding</em>, not weak. Iron is leaving the system — make room for warmth, softness, and fewer decisions.</>,
+    guide: [
+      { kind:"Move",   title:"Twenty minutes of slow walking, outdoors if possible", why:"Light motion eases cramping without taxing a lower-output system." },
+      { kind:"Eat",    title:"Iron-forward meal with vitamin C",                     why:"Lentils, beef, or tofu alongside citrus or peppers replenish what's leaving." },
+      { kind:"Rest",   title:"In bed by 10:30, phone outside the room",              why:"Sleep consolidates hormonal reset; screens delay melatonin onset." },
+      { kind:"Notice", title:"Track cramp intensity on day 1 vs. day 3",             why:"Flags patterns we can surface at your next check-in." }
+    ]
+  },
+  follicular: {
+    body: ["Estrogen rising; mood and cognition typically climb.","Strength and coordination improve through mid-phase.","Libido begins to rise mid-cycle."],
+    prose: <>Estrogen is <em>climbing</em>. Planning, learning and lifting all tend to land more easily now — this is the week to try something new.</>,
+    guide: [
+      { kind:"Move",   title:"Strength training, heavier than last week",           why:"Motor learning and recovery both peak in mid-follicular." },
+      { kind:"Eat",    title:"Lean protein at breakfast, fermented veg at dinner",  why:"Supports muscle synthesis and early-phase gut diversity." },
+      { kind:"Rest",   title:"Morning sunlight within 30 min of waking",            why:"Anchors circadian rhythm while melatonin is naturally low." },
+      { kind:"Notice", title:"Cervical fluid turning clearer and wetter",           why:"Early sign of the fertile window opening." }
+    ]
+  },
+  ovulatory: {
+    body: ["Estrogen peaks, then a brief LH surge.","Basal temperature will rise about 0.3°C after ovulation.","Verbal fluency and social confidence often highest."],
+    prose: <>The fertile window is <em>open</em>. Output is high but volatile — protect your attention and use this energy on what matters.</>,
+    guide: [
+      { kind:"Move",   title:"High-intensity intervals, 25 minutes, capped",       why:"Power output peaks, but recovery will narrow fast." },
+      { kind:"Eat",    title:"Hydrate aggressively; salt your first meal",         why:"Fluid and electrolyte needs are higher this week." },
+      { kind:"Rest",   title:"Protect a non-negotiable wind-down window",          why:"Sleep fragments more easily around ovulation." },
+      { kind:"Notice", title:"Mid-cycle twinge on one side (mittelschmerz)",       why:"Often coincides with follicle release. Harmless; worth logging." }
+    ]
+  },
+  luteal: {
+    body: ["Progesterone dominant; slight temperature elevation.","Appetite increases; insulin sensitivity drops.","Cortisol response is higher — stress hits harder."],
+    prose: <>Progesterone is <em>dominant</em>. The body is running warmer and hungrier; stress lands harder. Slow the pace on purpose.</>,
+    guide: [
+      { kind:"Move",   title:"Thirty minutes Zone 2 — conversational pace",         why:"Preserves cardio base without spiking cortisol." },
+      { kind:"Eat",    title:"Complex carbs with dinner, magnesium before bed",     why:"Supports serotonin production and sleep quality late-luteal." },
+      { kind:"Rest",   title:"Bedtime 20 minutes earlier than follicular baseline", why:"Luteal sleep is lighter; extra time compensates." },
+      { kind:"Notice", title:"Mood dips the day before symptoms arrive",            why:"Early PMS signal — we'll surface it on Today if it repeats." }
+    ]
+  }
+};
+
+const SYMPTOM_GROUPS = [
+  { key:"flow",   label:"Flow",        note:"optional",      items:["None","Spotting","Light","Medium","Heavy"], scale:true },
+  { key:"energy", label:"Energy",      note:"1–5",           scale:true, items:["1","2","3","4","5"], legend:["depleted","steady","charged"] },
+  { key:"mood",   label:"Mood",        note:"multi-select",  items:["Calm","Focused","Irritable","Anxious","Low","Tender","Sharp","Social"] },
+  { key:"body",   label:"Body",        note:"multi-select",  items:["Cramps","Bloating","Back pain","Breast tenderness","Headache","Nausea","Acne","Joint laxity"] },
+  { key:"sleep",  label:"Sleep",       note:"last night",    items:["<5h","5–6h","7h","8h","9h+","Broken","Vivid dreams"] },
+];
+
+const ARTICLES = [
+  { cat:"Phase primer", title:"Why your luteal week feels heavier — and why that's useful", time:"5 min" },
+  { cat:"Nutrition",    title:"Magnesium before bed: the smallest intervention with the biggest return", time:"4 min" },
+  { cat:"Movement",     title:"Programming training around the cycle without becoming precious about it", time:"7 min" },
+  { cat:"Fertility",    title:"Reading cervical fluid as data, not destiny", time:"6 min" },
+];
+
+// ------- lotus mark -------
+function LotusMark(){
+  // three petals forming a grounded lotus — hairline strokes, no gloss
+  return (
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      {/* base line */}
+      <path d="M6 38 H42" />
+      {/* center petal */}
+      <path d="M24 38 C 19 30, 19 20, 24 10 C 29 20, 29 30, 24 38 Z" />
+      {/* left petal */}
+      <path d="M24 38 C 14 34, 8 26, 8 18 C 16 20, 22 28, 24 38 Z" />
+      {/* right petal */}
+      <path d="M24 38 C 34 34, 40 26, 40 18 C 32 20, 26 28, 24 38 Z" />
+      {/* small dot above — the droplet */}
+      <circle cx="24" cy="8" r="1.6" fill="currentColor" stroke="none"/>
+    </svg>
+  );
+}
+
+// ------- icons -------
+const Icon = ({d,size=20,fill="none"}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">{d}</svg>
+);
+const I = {
+  today:  <Icon d={<><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></>} />,
+  check:  <Icon d={<><path d="M4 6h16M4 12h10M4 18h16"/></>} />,
+  guide:  <Icon d={<><path d="M4 5h12a4 4 0 0 1 4 4v10H8a4 4 0 0 1-4-4Z"/><path d="M4 5v10a4 4 0 0 0 4 4"/></>} />,
+  cycle:  <Icon d={<><path d="M12 3v3"/><path d="M12 18v3"/><path d="M3 12h3"/><path d="M18 12h3"/><circle cx="12" cy="12" r="7"/></>} />,
+  arrow:  <Icon size={16} d={<path d="M5 12h14M13 6l6 6-6 6"/>} />,
+  more:   <Icon size={18} d={<><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></>} />,
+  clock:  <Icon size={14} d={<><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>} />,
+};
+
+// ------- status bar -------
+function StatusBar(){
+  return (
+    <div className="status">
+      <div className="l">9:41</div>
+      <div className="r">
+        <svg width="16" height="10" viewBox="0 0 16 10" fill="none"><path d="M1 9h2V6H1v3Zm4 0h2V4H5v5Zm4 0h2V2H9v7Zm4 0h2V0h-2v9Z" fill="currentColor"/></svg>
+        <svg width="15" height="10" viewBox="0 0 15 10" fill="none"><path d="M7.5 2.3a6.5 6.5 0 0 0-4.6 1.9l1.3 1.3a4.6 4.6 0 0 1 6.6 0l1.3-1.3A6.5 6.5 0 0 0 7.5 2.3ZM1 4.2 2.3 5.5a7.4 7.4 0 0 1 10.4 0L14 4.2a9.2 9.2 0 0 0-13 0Zm3.9 3.9 2.6 2.6 2.6-2.6a3.7 3.7 0 0 0-5.2 0Z" fill="currentColor"/></svg>
+        <svg width="24" height="10" viewBox="0 0 24 10" fill="none"><rect x=".5" y=".5" width="20" height="9" rx="2" stroke="currentColor"/><rect x="2" y="2" width="16" height="6" rx="1" fill="currentColor"/><path d="M22 3v4" stroke="currentColor"/></svg>
+      </div>
+    </div>
+  );
+}
+
+function Brand(){
+  return (
+    <div className="hdr">
+      <div className="logo">
+        <div className="logo-mark"><LotusMark/></div>
+        <div className="brand">in<em>Balance</em></div>
+      </div>
+      <div className="label">v.05</div>
+    </div>
+  );
+}
+
+function TabBar({active, setActive}){
+  const tabs = [
+    { k:"today",  label:"Today",    icon:I.today },
+    { k:"checkin",label:"Check-in", icon:I.check },
+    { k:"guide",  label:"Guide",    icon:I.guide },
+    { k:"cycle",  label:"Cycle",    icon:I.cycle },
+  ];
+  return (
+    <div className="tabs">
+      {tabs.map(t=>(
+        <button key={t.k} className={`tab ${active===t.k?'active':''}`} onClick={()=>setActive(t.k)}>
+          {t.icon}
+          <span>{t.label}</span>
+          <span className="tab-dot"></span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ---------- Ribbon ----------
+function Ribbon({day, small=false}){
+  // each phase flex proportional to range
+  const segs = PHASES.map(p => ({...p, span: p.end - p.start + 1}));
+  const total = CYCLE_LEN;
+  const markerPct = ((day-0.5) / total) * 100;
+
+  // fertile window days 12-16
+  const fStart = (12-1)/total*100;
+  const fEnd   = (16/total)*100;
+
+  return (
+    <div className="cyc-ribbon">
+      <div className="rb-h">
+        <span>Day 1 · last period</span>
+        <span>Day {CYCLE_LEN} · next period</span>
+      </div>
+      <div className="rb-track" style={{position:'relative'}}>
+        <div className="rb-bg">
+          {segs.map(s => (
+            <div key={s.key} className={`s ${s.seg}`} style={{flex:s.span, background:s.color}}>
+              {!small && <span>{s.name}</span>}
+            </div>
+          ))}
+        </div>
+        <div className="rb-fwindow" style={{left:`${fStart}%`, right:`${100-fEnd}%`}} title="Fertile window"></div>
+        <div className="rb-marker" style={{left:`calc(${markerPct}% - 1px)`}}></div>
+      </div>
+      <div className="rb-days">
+        <span>1</span><span>7</span><span>14</span><span>21</span><span>28</span>
+      </div>
+    </div>
+  );
+}
+
+// ---------- TODAY ----------
+function TodayScreen({day, setTab}){
+  const ph = phaseForDay(day);
+  const copy = PHASE_COPY[ph.key];
+  const [pulse,setPulse] = useState(null);
+  const confPct = Math.round(60 + (day % 5) * 6); // mock confidence 60–90
+  return (
+    <div className="page fade-in" key={ph.key}>
+      <div className="today-head">
+        <div className="today-date">
+          <div className="d">Sat, Apr 18 · 2026</div>
+          <div className="cd">Cycle day {day} / {CYCLE_LEN}</div>
+        </div>
+      </div>
+
+      <div className="phase-card">
+        <div className="row1">
+          <div>
+            <div className="ph-name">You are in <em>{ph.name.toLowerCase()}</em>.</div>
+            <div className="ph-day">Day {day} — {ph.key==="luteal"?"late":"mid"} {ph.name.toLowerCase()}</div>
+          </div>
+          <div className="ph-tag"><span className="dot"></span>{ph.name}</div>
+        </div>
+        <p className="prose">{copy.prose}</p>
+        <div className="meta">
+          <span><b>{confPct}%</b> confidence</span>
+          <span>Based on <b>{4 + (day%3)}</b> cycles</span>
+          <span>Next period in <b>{Math.max(1, CYCLE_LEN - day + 1)}d</b></span>
+        </div>
+        <div className="confidence">
+          <div className="conf-track"><div className="conf-fill" style={{width:`${confPct}%`}}></div></div>
+          <div className="conf-label">{confPct>=80?"high":confPct>=65?"moderate":"gathering"}</div>
+        </div>
+      </div>
+
+      <div className="sec-h">
+        <div className="t">What your body may <em>need</em> today</div>
+        <div className="a">3 of 4 ·  <button onClick={()=>setTab("guide")}>see plan</button></div>
+      </div>
+      <div className="guide-list">
+        {copy.guide.slice(0,3).map((g,i)=>(
+          <div className="guide-row" key={i}>
+            <div className="num">0{i+1}</div>
+            <div className="body">
+              <div className="kind">{g.kind}</div>
+              <div className="title">{g.title}</div>
+              <div className="why">{g.why}</div>
+            </div>
+            <div className="arrow">{I.arrow}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="sec-h">
+        <div className="t"><em>Pulse</em> check</div>
+        <div className="a">10 seconds</div>
+      </div>
+      <div className="pulse">
+        <div className="h">
+          <div className="q">How are you, really?</div>
+          <div className="t">Energy · 1–5</div>
+        </div>
+        <div className="opts">
+          {[1,2,3,4,5].map(n=>(
+            <button key={n} className={`opt ${pulse===n?'on':''}`} onClick={()=>setPulse(n)}>{n}</button>
+          ))}
+        </div>
+        <div className="legend"><span>Depleted</span><span>Steady</span><span>Charged</span></div>
+      </div>
+
+      <div className="sec-h">
+        <div className="t">Where you are in the <em>cycle</em></div>
+        <div className="a"><button onClick={()=>setTab("cycle")}>details</button></div>
+      </div>
+      <Ribbon day={day}/>
+    </div>
+  );
+}
+
+// ---------- CHECK-IN ----------
+function CheckinScreen({day}){
+  const ph = phaseForDay(day);
+  const [state,setState] = useState({ flow: 0, energy: 3, mood: [], body: [], sleep: null });
+  const toggle = (key, val) => setState(s => {
+    if (Array.isArray(s[key])) {
+      const has = s[key].includes(val);
+      return { ...s, [key]: has ? s[key].filter(x=>x!==val) : [...s[key], val] };
+    }
+    return { ...s, [key]: val };
+  });
+
+  return (
+    <div className="page fade-in">
+      <div className="ci-hero">
+        <div className="eyebrow">Daily check-in · {ph.name.toLowerCase()} · day {day}</div>
+        <h1>A few quick<br/><em>observations.</em></h1>
+        <p>All optional. Whatever you log helps us sharpen the next prediction.</p>
+      </div>
+
+      {/* FLOW */}
+      <div className="ci-group first">
+        <div className="gh"><div className="gl">Flow</div><div className="gs">today</div></div>
+        <div className="scale">
+          {SYMPTOM_GROUPS[0].items.map((x,i)=>(
+            <div key={x} className={`s ${state.flow===i?'on':''}`} onClick={()=>toggle('flow', i)} style={{cursor:'pointer'}}>
+              {i===0 ? "—" : "●".repeat(Math.min(i,4))}
+            </div>
+          ))}
+        </div>
+        <div className="scale-legend">
+          {SYMPTOM_GROUPS[0].items.map(x=><span key={x}>{x}</span>)}
+        </div>
+      </div>
+
+      {/* ENERGY */}
+      <div className="ci-group">
+        <div className="gh"><div className="gl">Energy</div><div className="gs">1 to 5</div></div>
+        <div className="scale">
+          {[1,2,3,4,5].map(n=>(
+            <div key={n} className={`s ${state.energy===n?'on':''}`} onClick={()=>toggle('energy', n)} style={{cursor:'pointer'}}>{n}</div>
+          ))}
+        </div>
+        <div className="scale-legend"><span>Depleted</span><span></span><span>Steady</span><span></span><span>Charged</span></div>
+      </div>
+
+      {/* MOOD */}
+      <div className="ci-group">
+        <div className="gh"><div className="gl">Mood</div><div className="gs">tap any</div></div>
+        <div className="chips">
+          {SYMPTOM_GROUPS[2].items.map(x=>(
+            <button key={x} className={`chip ${state.mood.includes(x)?'on':''}`} onClick={()=>toggle('mood', x)}>{x}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* BODY */}
+      <div className="ci-group">
+        <div className="gh"><div className="gl">Body</div><div className="gs">tap any</div></div>
+        <div className="chips">
+          {SYMPTOM_GROUPS[3].items.map(x=>(
+            <button key={x} className={`chip ${state.body.includes(x)?'on':''}`} onClick={()=>toggle('body', x)}>{x}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* SLEEP */}
+      <div className="ci-group">
+        <div className="gh"><div className="gl">Sleep</div><div className="gs">last night</div></div>
+        <div className="chips">
+          {SYMPTOM_GROUPS[4].items.map(x=>(
+            <button key={x} className={`chip ${state.sleep===x?'on':''}`} onClick={()=>toggle('sleep', x)}>{x}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* NOTE */}
+      <div className="ci-group">
+        <div className="gh"><div className="gl">Note</div><div className="gs">optional</div></div>
+        <textarea placeholder="Anything worth remembering — a pattern, a small win, something that hurt." style={{width:'100%',minHeight:72,padding:12,border:'1px solid var(--rule-2)',borderRadius:2,background:'var(--paper)',fontFamily:'var(--serif)',fontSize:16,color:'var(--ink)',resize:'vertical'}} />
+      </div>
+
+      <div className="ci-submit">
+        <button className="btn-ghost">Skip</button>
+        <button className="btn-primary">Save check-in {I.arrow}</button>
+      </div>
+    </div>
+  );
+}
+
+// ---------- GUIDE ----------
+function GuideScreen({day}){
+  const ph = phaseForDay(day);
+  const copy = PHASE_COPY[ph.key];
+  const [done,setDone] = useState({});
+  const toggleDone = (i) => setDone(d => ({...d, [i]: !d[i]}));
+  return (
+    <div className="page fade-in" key={ph.key}>
+      <div className="guide-hero">
+        <div className="k">Today · {ph.name.toLowerCase()} phase</div>
+        <h1>A plan, not a<br/><em>prescription.</em></h1>
+      </div>
+      <div className="plan">
+        {copy.guide.map((g,i)=>(
+          <div key={i} className={`plan-item ${done[i]?'done':''}`} onClick={()=>toggleDone(i)} style={{cursor:'pointer'}}>
+            <div className="cat">
+              {g.kind}
+              <span className="sm">0{i+1}</span>
+            </div>
+            <div>
+              <div className="title">{g.title}</div>
+              <div className="sub">{g.why}</div>
+            </div>
+            <div className="check">{done[i] && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5 5 9l5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="sec-h" style={{marginTop:30}}>
+        <div className="t">For this <em>phase</em></div>
+        <div className="a">curated</div>
+      </div>
+      <div className="essays">
+        {ARTICLES.map((a,i)=>(
+          <div key={i} className="essay">
+            <div className="img"><span>essay {i+1}</span></div>
+            <div>
+              <div className="title">{a.title}</div>
+              <div className="meta">{a.cat}</div>
+            </div>
+            <div className="time">{I.clock} {a.time}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="sec-h" style={{marginTop:30}}>
+        <div className="t">The <em>science</em>, briefly</div>
+        <div className="a">what's happening</div>
+      </div>
+      <div style={{borderTop:'1px solid var(--ink)'}}>
+        {copy.body.map((b,i)=>(
+          <div key={i} style={{display:'grid',gridTemplateColumns:'28px 1fr',gap:14,padding:'16px 0',borderBottom:'1px solid var(--rule)'}}>
+            <div style={{fontFamily:'var(--mono)',fontSize:10,letterSpacing:'.08em',color:'var(--ink-3)'}}>{String(i+1).padStart(2,'0')}</div>
+            <div style={{fontFamily:'var(--serif)',fontSize:17,lineHeight:1.35,color:'var(--ink-2)'}}>{b}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------- CYCLE ----------
+function CycleScreen({day}){
+  const ph = phaseForDay(day);
+  const periodStart = CYCLE_LEN - day + 1;
+  const fertileIn = Math.max(0, 13 - day);
+  return (
+    <div className="page fade-in">
+      <div className="cycle-head">
+        <div className="eyebrow">Your cycle · {CYCLE_LEN}d average</div>
+        <h1>Cycle <em>intelligence.</em></h1>
+        <p>Patterns across your last 6 cycles.</p>
+      </div>
+
+      <Ribbon day={day}/>
+
+      <div className="pred">
+        <div className="cell">
+          <div className="k">Next period</div>
+          <div className="v">in <em>{periodStart}</em> days</div>
+          <div className="sub">Apr 25 ± 2 days</div>
+        </div>
+        <div className="cell">
+          <div className="k">Fertile window</div>
+          <div className="v">{fertileIn>0 ? <>in <em>{fertileIn}</em> days</> : <em>now open</em>}</div>
+          <div className="sub">5-day window · moderate certainty</div>
+        </div>
+      </div>
+
+      <div className="stats">
+        <div className="c"><div className="k">avg cycle</div><div className="v">28d</div><div className="t">± 1.4 days</div></div>
+        <div className="c"><div className="k">avg period</div><div className="v">5d</div><div className="t">± 0.6 days</div></div>
+        <div className="c"><div className="k">logged</div><div className="v">6</div><div className="t">cycles</div></div>
+      </div>
+
+      <div className="sec-h" style={{marginTop:26}}>
+        <div className="t">Patterns we're <em>seeing</em></div>
+        <div className="a">last 90 days</div>
+      </div>
+      <div className="patterns">
+        <div className="pattern">
+          <div className="lbl">Mood</div>
+          <div className="body">A dip in mood tends to arrive <em>2 days</em> before your period, not on day one.</div>
+          <div className="d">3/3</div>
+        </div>
+        <div className="pattern">
+          <div className="lbl">Sleep</div>
+          <div className="body">Luteal sleep runs <em>~40 min shorter</em> than follicular — consistent across 4 cycles.</div>
+          <div className="d">4/4</div>
+        </div>
+        <div className="pattern">
+          <div className="lbl">Energy</div>
+          <div className="body">Peak energy scores cluster on <em>days 10–13</em>. Training windows planned here held.</div>
+          <div className="d">5/6</div>
+        </div>
+        <div className="pattern">
+          <div className="lbl">Flow</div>
+          <div className="body">Heaviest day is reliably <em>day 2</em>, not day 1. Plan accordingly.</div>
+          <div className="d">6/6</div>
+        </div>
+      </div>
+
+      <div className="sec-h" style={{marginTop:26}}>
+        <div className="t">A note on <em>accuracy</em></div>
+        <div className="a"></div>
+      </div>
+      <p style={{fontFamily:'var(--serif)',fontSize:16,lineHeight:1.45,color:'var(--ink-2)',borderTop:'1px solid var(--rule)',paddingTop:14}}>
+        Predictions tighten with every cycle you log. Fertility awareness is useful context, not contraception — we're honest about the difference.
+      </p>
+    </div>
+  );
+}
+
+// ---------- WELCOME ----------
+function WelcomeScreen(){
+  return (
+    <div className="wl fade-in">
+      <div className="mark"><LotusMark/></div>
+      <div className="eyebrow" style={{marginTop:28}}>A cycle-aware wellness companion</div>
+      <h1>Your body has <em>rhythm.</em><br/>So should the advice.</h1>
+      <p>InBalance turns a 30-second daily check-in into calm, specific guidance for your phase — movement, food, sleep, mood, and fertility awareness.</p>
+      <div className="tenets">
+        <div className="tenet"><div className="n">01</div><div className="t">Quiet by default. Notifications only when the pattern earns it.</div></div>
+        <div className="tenet"><div className="n">02</div><div className="t">Prediction with confidence intervals, not false precision.</div></div>
+        <div className="tenet"><div className="n">03</div><div className="t">Body-literate language. No euphemisms, no infantilizing.</div></div>
+        <div className="tenet"><div className="n">04</div><div className="t">Your data stays on device unless you say otherwise.</div></div>
+      </div>
+      <div className="cta">
+        <button className="btn-ghost">Sign in</button>
+        <button className="btn-primary">Begin {I.arrow}</button>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Phone frame ----------
+function Phone({label, children, tab, setTab}){
+  return (
+    <div className="stage-wrap">
+      <div className="stage-label">{label}</div>
+      <div className="phone">
+        <div className="notch"></div>
+        <StatusBar/>
+        <Brand/>
+        <div className="screen">{children}</div>
+        {tab !== undefined && <TabBar active={tab} setActive={setTab}/>}
+      </div>
+    </div>
+  );
+}
+
+// ---------- App ----------
+function App(){
+  const defaults = JSON.parse(document.getElementById('tweak-defaults').textContent.replace('/*EDITMODE-BEGIN*/','').replace('/*EDITMODE-END*/',''));
+  const [tweaks,setTweaks] = useState({ ...defaults });
+  const [editMode,setEditMode] = useState(false);
+  const [activeTabs,setActiveTabs] = useState({ today:"today", cin:"checkin", guide:"guide", cycle:"cycle" });
+
+  const day = tweaks.cycleDay;
+
+  // apply palette
+  useEffect(()=>{
+    document.body.setAttribute('data-palette', tweaks.palette || 'warm');
+    // sync outer stage background
+    const stageBg = tweaks.palette === 'deep' ? '#0a0908' : tweaks.palette === 'bone' ? '#15161b' : '#1a1916';
+    document.documentElement.style.background = stageBg;
+    document.body.style.background = stageBg;
+  },[tweaks.palette]);
+
+  // apply accent
+  useEffect(()=>{
+    const root = document.documentElement;
+    const ph = phaseForDay(day);
+    const map = { rust:"var(--menstrual)", sage:"var(--follicular)", ochre:"var(--ovulatory)", plum:"var(--luteal)", ink:"var(--ink)" };
+    let v;
+    if (tweaks.accent === "phase") v = `var(--${ph.key})`;
+    else v = map[tweaks.accent];
+    root.style.setProperty('--accent', v);
+  },[tweaks.accent, day]);
+
+  // type
+  useEffect(()=>{
+    const root = document.documentElement;
+    const map = {
+      instrument: ['"Instrument Serif", "Times New Roman", serif', '"Inter", sans-serif'],
+      fraunces: ['"Fraunces", "Times New Roman", serif', '"Inter", sans-serif'],
+      plex: ['"IBM Plex Serif", "Times New Roman", serif', '"IBM Plex Sans", "Inter", sans-serif'],
+    };
+    // lazily load google font
+    if (tweaks.type==='fraunces' && !document.getElementById('gf-fr')) {
+      const l=document.createElement('link'); l.id='gf-fr'; l.rel='stylesheet';
+      l.href='https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&display=swap';
+      document.head.appendChild(l);
+    }
+    if (tweaks.type==='plex' && !document.getElementById('gf-plex')) {
+      const l=document.createElement('link'); l.id='gf-plex'; l.rel='stylesheet';
+      l.href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,400;1,400&display=swap';
+      document.head.appendChild(l);
+    }
+    const [s,sn] = map[tweaks.type];
+    root.style.setProperty('--serif', s);
+    root.style.setProperty('--sans', sn);
+  },[tweaks.type]);
+
+  // density
+  useEffect(()=>{
+    document.body.style.fontSize = tweaks.density==='compact' ? '14px' : '15px';
+  },[tweaks.density]);
+
+  // Tweaks panel wiring
+  useEffect(()=>{
+    const ok = (type)=>type==='__activate_edit_mode'||type==='__deactivate_edit_mode';
+    const handler = (e) => {
+      if (!e.data || !ok(e.data.type)) return;
+      setEditMode(e.data.type==='__activate_edit_mode');
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({type:'__edit_mode_available'}, '*');
+    return ()=>window.removeEventListener('message', handler);
+  },[]);
+
+  useEffect(()=>{
+    const panel = document.getElementById('tweaks');
+    panel.classList.toggle('on', editMode);
+  },[editMode]);
+
+  // bind tweaks UI
+  useEffect(()=>{
+    const d = document.getElementById('tw-day');
+    const dl = document.getElementById('tw-day-label');
+    const setDayLabel = (v)=>{
+      const ph = phaseForDay(+v);
+      dl.textContent = `Day ${v} · ${ph.name}`;
+    };
+    d.value = tweaks.cycleDay; setDayLabel(tweaks.cycleDay);
+    d.oninput = (e)=>{ const v=+e.target.value; setDayLabel(v); setTweaks(t=>({...t,cycleDay:v})); persist({cycleDay:v}); };
+
+    const wire = (id,key)=>{
+      const current = tweaks[key];
+      document.querySelectorAll(`#${id} button`).forEach(b=>{
+        b.classList.toggle('on', b.dataset.v === current);
+        b.onclick=()=>{
+          document.querySelectorAll(`#${id} button`).forEach(x=>x.classList.remove('on'));
+          b.classList.add('on');
+          const v=b.dataset.v;
+          setTweaks(t=>({...t,[key]:v}));
+          persist({[key]:v});
+        };
+      });
+    };
+    wire('tw-accent','accent');
+    wire('tw-type','type');
+    wire('tw-density','density');
+    wire('tw-show','show');
+    wire('tw-palette','palette');
+  },[]);
+
+  const persist = (edits) => {
+    window.parent.postMessage({type:'__edit_mode_set_keys', edits}, '*');
+  };
+
+  // screens
+  const screens = [
+    { key:"today",    label:"Today",       tabKey:"today",   render: ()=> <TodayScreen day={day} setTab={(k)=>setActiveTabs(s=>({...s,today:k}))}/> },
+    { key:"checkin",  label:"Check-in",    tabKey:"checkin", render: ()=> <CheckinScreen day={day}/> },
+    { key:"guide",    label:"Guide",       tabKey:"guide",   render: ()=> <GuideScreen day={day}/> },
+    { key:"cycle",    label:"Cycle",       tabKey:"cycle",   render: ()=> <CycleScreen day={day}/> },
+    { key:"welcome",  label:"Welcome",     tabKey:null,      render: ()=> <WelcomeScreen/> },
+  ];
+
+  const visible = tweaks.show==='all' ? screens : screens.filter(s=>s.key===tweaks.show);
+
+  return (
+    <>
+      {visible.map(s => (
+        <Phone
+          key={s.key}
+          label={s.label}
+          tab={s.tabKey}
+          setTab={s.tabKey ? (k)=>{
+            setActiveTabs(a=>({...a,[s.key]:k}));
+            // jump to that tab's own phone if user clicked
+          } : undefined}
+        >
+          {s.render()}
+        </Phone>
+      ))}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('stage')).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>InBalance — two directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root{
+    --sf: -apple-system, "SF Pro Text", "SF Pro Display", "Inter", "Helvetica Neue", system-ui, sans-serif;
+    --serif: "Instrument Serif", "New York", Georgia, serif;
+  }
+  *{box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  html,body{margin:0;padding:0;background:#0d0d10;color:#fff;font-family:var(--sf);font-size:15px;line-height:1.45;min-height:100vh}
+  button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+  .stage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:36px 24px 72px;gap:56px;flex-wrap:wrap}
+  .col{display:flex;flex-direction:column;align-items:center;gap:14px}
+  .col-label{font-family:var(--sf);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#9a9aa3;display:flex;align-items:baseline;gap:10px}
+  .col-label b{color:#fff;font-weight:600;letter-spacing:.01em;text-transform:none;font-size:22px;font-family:var(--serif);font-style:italic}
+  .col-label span{color:#6b6b76}
+  .phone{
+    width:390px;height:844px;border-radius:52px;position:relative;overflow:hidden;
+    box-shadow:0 0 0 10px #0a0a0c, 0 0 0 11px #28282e, 0 50px 90px -30px rgba(0,0,0,.7);
+    color:#111;
+    display:flex;flex-direction:column;
+  }
+  .phone > div{min-width:0;max-width:100%;width:100%;overflow:hidden}
+  .atlas, .still{min-width:0;max-width:100%;width:100%;overflow:hidden}
+  .atlas svg, .still svg{max-width:100%}
+  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:120px;height:32px;background:#000;border-radius:20px;z-index:60}
+
+  /* Tweaks panel */
+  .tw{position:fixed;right:20px;bottom:20px;width:300px;background:rgba(22,22,28,.92);color:#fff;border:1px solid #2a2a33;border-radius:14px;padding:16px;z-index:100;backdrop-filter:blur(14px);display:none}
+  .tw.on{display:block}
+  .tw h3{margin:0 0 8px;font-size:14px;font-weight:600;letter-spacing:.01em}
+  .tw .row{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid #23232b}
+  .tw .row:first-of-type{border-top:0}
+  .tw .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#8e8e98}
+  .tw .seg{display:flex;gap:4px;flex-wrap:wrap}
+  .tw .seg button{padding:6px 10px;border:1px solid #2e2e37;border-radius:8px;font-size:11px;color:#cfcfd8}
+  .tw .seg button.on{background:#fff;color:#111;border-color:#fff}
+  .tw input[type=range]{width:100%}
+
+  /* =====================================================
+     DIRECTION A — ATLAS
+     ===================================================== */
+  .atlas{
+    flex:1;display:flex;flex-direction:column;height:100%;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, color-mix(in oklch, var(--ph) 22%, transparent), transparent 60%),
+      linear-gradient(#fafafb, #f2f2f5);
+    color:#0c0c10;
+    font-family:var(--sf);
+  }
+  .atlas-status{display:flex;justify-content:space-between;align-items:center;padding:16px 28px 4px;font-weight:600;font-size:13px;color:#111}
+  .atlas-status-r{display:flex;gap:6px;align-items:center}
+  .atlas-brand{display:flex;justify-content:space-between;align-items:center;padding:6px 20px 0}
+  .atlas-brand strong{font-weight:700;letter-spacing:-.01em;font-size:17px}
+  .atlas-brand .atlas-sub{font-size:11px;color:#8a8a92;font-weight:500;margin-left:8px;letter-spacing:.04em}
+  .atlas-avatar{width:32px;height:32px;border-radius:50%;background:#e5e5ea;color:#111;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .atlas-screen{flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:100px}
+  .atlas-screen::-webkit-scrollbar{display:none}
+
+  .atlas-page{padding:14px 20px 24px;display:flex;flex-direction:column;gap:22px}
+  .atlas-eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--ph);margin-bottom:6px}
+  .atlas-h1{font-family:var(--serif);font-weight:400;font-size:34px;line-height:1.04;letter-spacing:-.01em;margin:0}
+  .atlas-lede{color:#4a4a52;font-size:15px;margin:8px 0 0;max-width:28ch;line-height:1.4}
+  .atlas-sub{font-size:11px;color:#8a8a92;letter-spacing:.02em;font-weight:500}
+  .atlas-link{font-size:12px;color:var(--ph);font-weight:600}
+
+  .atlas-hero{display:grid;grid-template-columns:1fr 120px;gap:14px;align-items:center;padding-top:4px}
+  .atlas-hero-l{display:flex;flex-direction:column;min-width:0}
+  .atlas-ring{align-self:center;justify-self:end}
+  .atlas-ring svg{width:120px;height:120px}
+
+  .atlas-quicklog{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none}
+  .atlas-quicklog::-webkit-scrollbar{display:none}
+  .atlas-ql{
+    padding:10px 14px;border-radius:999px;white-space:nowrap;font-size:13px;font-weight:500;
+    background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.06);
+    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    box-shadow:0 1px 2px rgba(0,0,0,.04);
+  }
+
+  .atlas-sec{display:flex;flex-direction:column;gap:10px}
+  .atlas-sec-h{display:flex;justify-content:space-between;align-items:baseline;padding:0 2px;font-size:13px;font-weight:600}
+  .atlas-card{
+    background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.05);border-radius:18px;
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04);
+  }
+  .atlas-card-pad{padding:18px}
+
+  .atlas-plan{display:flex;flex-direction:column;gap:0;background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.05);border-radius:18px;backdrop-filter:blur(20px);overflow:hidden}
+  .atlas-plan-row{display:grid;grid-template-columns:34px 1fr 28px;gap:10px;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(0,0,0,.05)}
+  .atlas-plan-row.big{padding:18px 20px}
+  .atlas-plan-row:last-of-type{border-bottom:0}
+  .atlas-plan-ix{font-size:11px;font-weight:600;color:#8a8a92;letter-spacing:.04em}
+  .atlas-plan-t{font-size:15px;font-weight:500}
+  .atlas-plan-c{color:#b5b5be;font-size:20px;text-align:right}
+  .atlas-plan-why{font-size:12px;color:#6b6b76;padding:12px 16px;background:rgba(0,0,0,.02);border-top:1px solid rgba(0,0,0,.04)}
+
+  .atlas-legend{display:flex;gap:14px;font-size:11px;color:#6b6b76;margin-top:10px;flex-wrap:wrap}
+  .atlas-legend span{display:inline-flex;align-items:center;gap:5px}
+  .atlas-legend i{display:inline-block;width:10px;height:2px;border-radius:1px}
+
+  .atlas-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .atlas-stats>div{background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.05);border-radius:14px;padding:12px;backdrop-filter:blur(20px)}
+  .atlas-stat-v{font-family:var(--serif);font-size:22px;line-height:1;font-weight:400}
+  .atlas-stat-v small{font-size:11px;color:#8a8a92;margin-left:2px;font-family:var(--sf);font-weight:500}
+  .atlas-stat-k{font-size:11px;color:#6b6b76;margin-top:4px;letter-spacing:.02em}
+
+  .atlas-cal{display:flex;flex-direction:column;gap:8px}
+  .atlas-cal-h,.atlas-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .atlas-cal-d{font-size:10.5px;color:#8a8a92;text-align:center;letter-spacing:.08em;font-weight:600;text-transform:uppercase}
+  .atlas-cell{aspect-ratio:1;position:relative;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:13px;font-weight:500;color:#0c0c10;overflow:hidden}
+  .atlas-cell-band{position:absolute;inset:0;border-radius:10px}
+  .atlas-cell-fert{position:absolute;inset:auto 0 2px;height:3px;background:oklch(70% 0.14 45);border-radius:2px;margin:0 6px}
+  .atlas-cell-pred{position:absolute;inset:0;border:1.5px dashed oklch(60% 0.16 8);border-radius:10px}
+  .atlas-cell.is-today{background:#0c0c10;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+  .atlas-cell.is-today .atlas-cell-band{display:none}
+  .atlas-cell span{position:relative;z-index:2}
+  .atlas-cal-legend{display:flex;gap:14px;font-size:11px;color:#6b6b76;margin-top:14px;flex-wrap:wrap}
+  .atlas-cal-legend i.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+  .atlas-cal-legend i.dot.ring{background:transparent;border:1.5px dashed oklch(60% 0.16 8)}
+
+  .atlas-heat{display:flex;flex-direction:column;gap:3px}
+  .atlas-heat-row{display:flex;gap:3px}
+  .atlas-heat-cell{flex:1;aspect-ratio:1;border-radius:3px}
+  .atlas-heat-axis{display:flex;justify-content:space-between;font-size:10px;color:#8a8a92;margin-top:8px;letter-spacing:.06em}
+
+  .atlas-pat{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 2px;border-bottom:1px solid rgba(0,0,0,.05);font-size:14px}
+  .atlas-pat:last-child{border-bottom:0}
+
+  .atlas-essays{display:flex;flex-direction:column;gap:8px}
+  .atlas-essay{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.05);border-radius:14px;padding:10px 14px;backdrop-filter:blur(20px)}
+  .atlas-essay-thumb{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#e9e9ef,#d6d6de)}
+  .atlas-essay-c{font-size:10.5px;color:var(--ph);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+  .atlas-essay-t{font-size:14px;font-weight:500;margin-top:2px;line-height:1.3}
+
+  .atlas-log-g{display:flex;flex-direction:column;gap:10px;padding-top:4px}
+  .atlas-log-h{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:600}
+  .atlas-log-chips,.atlas-log-scale{display:flex;flex-wrap:wrap;gap:6px}
+  .atlas-log-scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .atlas-chip{
+    padding:10px 14px;border-radius:999px;font-size:13px;font-weight:500;
+    background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.07);backdrop-filter:blur(20px);
+  }
+  .atlas-chip.on{background:#0c0c10;color:#fff;border-color:#0c0c10}
+  .atlas-log-submit{display:flex;gap:8px;padding-top:14px}
+  .atlas-btn{flex:1;padding:14px;border-radius:14px;background:#0c0c10;color:#fff;font-weight:600;font-size:14px}
+  .atlas-btn-g{padding:14px 18px;border-radius:14px;background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.07);font-weight:500;font-size:14px}
+
+  .atlas-tabs{
+    position:absolute;left:0;right:0;bottom:0;padding:10px 14px 28px;
+    background:rgba(250,250,251,.8);backdrop-filter:blur(24px);border-top:1px solid rgba(0,0,0,.06);
+    display:grid;grid-template-columns:repeat(4,1fr);
+  }
+  .atlas-tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px;color:#8a8a92;font-size:10px;font-weight:600;letter-spacing:.02em}
+  .atlas-tab.on{color:var(--ph)}
+
+  /* =====================================================
+     DIRECTION B — STILL
+     ===================================================== */
+  .still{
+    flex:1;display:flex;flex-direction:column;height:100%;
+    background:
+      radial-gradient(900px 500px at 70% 10%, color-mix(in oklch, var(--ph) 30%, transparent), transparent 60%),
+      radial-gradient(700px 600px at 20% 90%, color-mix(in oklch, var(--ph) 18%, transparent), transparent 60%),
+      #f6f4ef;
+    color:#1a1a1a;
+    font-family:var(--sf);
+    position:relative;
+  }
+  .still::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 20%, rgba(255,255,255,.5), transparent 60%);pointer-events:none}
+  .still-status{display:flex;justify-content:space-between;align-items:center;padding:16px 28px 4px;font-weight:600;font-size:13px;z-index:5;position:relative}
+  .still-status-r{display:flex;gap:6px}
+  .still-brand{padding:6px 28px 0;font-family:var(--serif);font-size:19px;letter-spacing:.01em;position:relative;z-index:5}
+  .still-brand span{color:#9a9a95;font-size:12px;font-family:var(--sf);font-style:normal;letter-spacing:.08em;text-transform:uppercase}
+  .still-screen{flex:1;overflow-y:auto;padding:8px 0 110px;scrollbar-width:none;position:relative;z-index:4}
+  .still-screen::-webkit-scrollbar{display:none}
+
+  .still-page{padding:12px 28px 24px;display:flex;flex-direction:column;gap:24px}
+  .still-eyeb{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#8a8a80;font-weight:500}
+  .still-h2{font-family:var(--serif);font-weight:400;font-size:40px;line-height:1;margin:6px 0 0;letter-spacing:-.01em}
+  .still-sub{color:#7a7a70;font-size:14px;margin:6px 0 0}
+
+  .still-date{display:flex;justify-content:space-between;font-size:12px;color:#8a8a80;letter-spacing:.04em;padding-top:4px}
+
+  .still-hero{display:flex;flex-direction:column;align-items:center;gap:10px;margin:4px 0 4px}
+  .still-orb-wrap{position:relative}
+  .still-orb .orb-breathe{transform-origin:center;animation:breathe 6s ease-in-out infinite}
+  @keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+  .still-phase{font-family:var(--serif);font-style:italic;font-size:28px}
+  .still-dayn{font-size:12px;color:#8a8a80;letter-spacing:.08em;text-transform:uppercase}
+
+  .still-lede{padding:8px 4px}
+  .still-line{font-family:var(--serif);font-size:28px;line-height:1.2;margin:0;letter-spacing:-.005em;color:#1a1a1a;text-wrap:balance}
+
+  .still-one{
+    display:flex;flex-direction:column;align-items:flex-start;gap:18px;
+    background:rgba(255,255,255,.55);border:1px solid rgba(0,0,0,.04);
+    border-radius:22px;padding:22px;backdrop-filter:blur(30px);
+    box-shadow:0 10px 40px -10px rgba(0,0,0,.08);
+  }
+  .still-one-k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#8a8a80;font-weight:500}
+  .still-one-t{font-family:var(--serif);font-size:22px;line-height:1.3;text-wrap:pretty;margin:0}
+  .still-one-b{padding:12px 18px;border-radius:999px;background:#1a1a1a;color:#fff;font-size:13px;font-weight:500;margin-top:8px}
+
+  .still-log-quick{
+    align-self:center;padding:12px 22px;border-radius:999px;
+    background:rgba(255,255,255,.65);border:1px solid rgba(0,0,0,.06);
+    font-size:13px;font-weight:500;backdrop-filter:blur(20px);
+  }
+
+  .still-foot{display:flex;justify-content:center;gap:10px;font-size:12px;color:#8a8a80;padding-top:6px}
+  .still-foot button{color:#1a1a1a;font-weight:500}
+
+  .still-cal{display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,.55);border:1px solid rgba(0,0,0,.04);border-radius:20px;padding:16px;backdrop-filter:blur(30px)}
+  .still-cal-h,.still-cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .still-cal-h span{font-size:10px;letter-spacing:.12em;color:#8a8a80;text-align:center;text-transform:uppercase}
+  .still-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;color:#1a1a1a;position:relative;border-radius:10px}
+  .still-cell.today{background:#1a1a1a;color:#fff}
+  .still-dot{width:4px;height:4px;border-radius:50%;margin-top:2px}
+  .still-dot.ring{background:transparent;border:1.5px solid oklch(60% 0.15 8);width:6px;height:6px}
+  .still-legend{display:flex;gap:14px;font-size:11.5px;color:#7a7a70;justify-content:center}
+  .still-legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+  .still-legend i.ring{background:transparent;border:1.5px solid oklch(60% 0.15 8)}
+
+  .still-note{padding:4px 0}
+  .still-note p{font-family:var(--serif);font-size:20px;line-height:1.4;margin:8px 0 0;color:#1a1a1a;text-wrap:pretty}
+  .still-note em{font-style:italic}
+
+  .still-g{display:flex;flex-direction:column;gap:10px}
+  .still-g-l{font-family:var(--serif);font-style:italic;font-size:22px}
+  .still-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .still-chip{padding:9px 14px;border-radius:999px;font-size:13px;background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.05);backdrop-filter:blur(20px)}
+  .still-chip.on{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+  .still-save{align-self:flex-end;padding:14px 26px;border-radius:999px;background:#1a1a1a;color:#fff;font-weight:500;font-size:14px;margin-top:6px}
+
+  .still-art{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid rgba(0,0,0,.06);cursor:pointer;text-decoration:none;color:inherit}
+  .still-art-t{font-family:var(--serif);font-size:20px;line-height:1.3}
+
+  .still-tabs{
+    position:absolute;left:20px;right:20px;bottom:22px;padding:8px;
+    background:rgba(255,255,255,.55);backdrop-filter:blur(30px);
+    border-radius:999px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;
+    border:1px solid rgba(0,0,0,.05);
+  }
+  .still-tab{padding:10px;border-radius:999px;font-size:12px;font-weight:500;color:#7a7a70}
+  .still-tab.on{background:#1a1a1a;color:#fff}
+
+  @media (max-width: 900px){
+    .stage{flex-direction:column;gap:32px}
+  }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <div class="col">
+    <div class="col-label"><b>Atlas</b><span>· data-forward coach</span></div>
+    <div class="phone"><div class="notch"></div><div id="atlas-root" style="flex:1;display:flex"></div></div>
+  </div>
+  <div class="col">
+    <div class="col-label"><b>Still</b><span>· quiet companion</span></div>
+    <div class="phone"><div class="notch"></div><div id="still-root" style="flex:1;display:flex"></div></div>
+  </div>
+</div>
+
+<div class="tw" id="tweaks">
+  <h3>Tweaks</h3>
+  <div class="row">
+    <span class="k">Cycle day</span>
+    <input type="range" id="tw-day" min="1" max="28" value="18"/>
+    <span class="k" id="tw-day-label" style="color:#fff"></span>
+  </div>
+  <div class="row">
+    <span class="k">Show</span>
+    <div class="seg" id="tw-show">
+      <button data-v="both" class="on">both</button>
+      <button data-v="atlas">Atlas only</button>
+      <button data-v="still">Still only</button>
+    </div>
+  </div>
+  <div class="row">
+    <span class="k">Initial tab</span>
+    <div class="seg" id="tw-tab">
+      <button data-v="today" class="on">today</button>
+      <button data-v="cycle">cycle</button>
+      <button data-v="log">log</button>
+      <button data-v="guide">guide/read</button>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="tweak-defaults">
+/*EDITMODE-BEGIN*/{
+  "cycleDay": 1,
+  "show": "both",
+  "tab": "today"
+}/*EDITMODE-END*/
+</script>
+
+<script type="text/babel" data-presets="env,react" src="atlas.jsx"></script>
+<script type="text/babel" data-presets="env,react" src="still.jsx"></script>
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect } = React;
+
+function Host(){
+  const defaults = JSON.parse(document.getElementById('tweak-defaults').textContent.replace('/*EDITMODE-BEGIN*/','').replace('/*EDITMODE-END*/',''));
+  const [tw,setTw] = useState(defaults);
+  const [edit,setEdit] = useState(false);
+
+  useEffect(()=>{
+    const h = (e)=>{
+      if(!e.data) return;
+      if(e.data.type==='__activate_edit_mode') setEdit(true);
+      if(e.data.type==='__deactivate_edit_mode') setEdit(false);
+    };
+    window.addEventListener('message',h);
+    window.parent.postMessage({type:'__edit_mode_available'},'*');
+    return ()=>window.removeEventListener('message',h);
+  },[]);
+  useEffect(()=>{document.getElementById('tweaks').classList.toggle('on',edit)},[edit]);
+
+  useEffect(()=>{
+    const d=document.getElementById('tw-day');
+    const dl=document.getElementById('tw-day-label');
+    const set=(v)=>{ dl.textContent = `Day ${v}`; };
+    d.value = tw.cycleDay; set(tw.cycleDay);
+    d.oninput=(e)=>{const v=+e.target.value; set(v); setTw(t=>({...t,cycleDay:v})); persist({cycleDay:v});};
+    const wire=(id,key)=>{
+      const cur = tw[key];
+      document.querySelectorAll(`#${id} button`).forEach(b=>{
+        b.classList.toggle('on', b.dataset.v===cur);
+        b.onclick=()=>{ document.querySelectorAll(`#${id} button`).forEach(x=>x.classList.remove('on')); b.classList.add('on'); const v=b.dataset.v; setTw(t=>({...t,[key]:v})); persist({[key]:v}); };
+      });
+    };
+    wire('tw-show','show');
+    wire('tw-tab','tab');
+  },[]);
+
+  const persist=(e)=>window.parent.postMessage({type:'__edit_mode_set_keys',edits:e},'*');
+
+  useEffect(()=>{
+    const show = tw.show;
+    document.querySelectorAll('.col').forEach((c,i)=>{
+      c.style.display = show==='both' ? '' : (show==='atlas' && i===0) || (show==='still' && i===1) ? '' : 'none';
+    });
+  },[tw.show]);
+
+  return null;
+}
+
+// host controls
+const hostDiv = document.createElement('div');
+document.body.appendChild(hostDiv);
+ReactDOM.createRoot(hostDiv).render(<Host/>);
+
+// mount phones (single roots, re-render on day change)
+const defaults = JSON.parse(document.getElementById('tweak-defaults').textContent.replace('/*EDITMODE-BEGIN*/','').replace('/*EDITMODE-END*/',''));
+let curDay = defaults.cycleDay;
+const atlasRoot = ReactDOM.createRoot(document.getElementById('atlas-root'));
+const stillRoot = ReactDOM.createRoot(document.getElementById('still-root'));
+function rerender(){ atlasRoot.render(<AtlasApp day={curDay}/>); stillRoot.render(<StillApp day={curDay}/>); }
+rerender();
+document.getElementById('tw-day').addEventListener('input', (e)=>{ curDay = +e.target.value; rerender(); });
+</script>
+</body>
+</html>

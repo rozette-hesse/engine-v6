@@ -1,0 +1,61 @@
+{
+  "Follicular": {
+    "headaches": 1.530421216848674,
+    "cramps": 0.5912636505460218,
+    "sorebreasts": 0.5085803432137286,
+    "fatigue": 2.708268330733229,
+    "sleepissue": 2.109204368174727,
+    "moodswing": 1.4929797191887675,
+    "stress": 2.78003120124805,
+    "foodcravings": 1.9297971918876755,
+    "indigestion": 1.5148205928237128,
+    "bloating": 1.561622464898596
+  },
+  "Fertility": {
+    "headaches": 1.4194139194139195,
+    "cramps": 0.7710622710622711,
+    "sorebreasts": 0.663003663003663,
+    "fatigue": 2.6465201465201464,
+    "sleepissue": 2.291208791208791,
+    "moodswing": 1.5677655677655677,
+    "stress": 2.8003663003663,
+    "foodcravings": 1.8882783882783882,
+    "indigestion": 1.5805860805860805,
+    "bloating": 1.771062271062271
+  },
+  "Luteal": {
+    "headaches": 1.3176895306859207,
+    "cramps": 0.8664259927797834,
+    "sorebreasts": 0.9169675090252708,
+    "fatigue": 2.673886883273165,
+    "sleepissue": 2.138387484957882,
+    "moodswing": 1.5210589651022863,
+    "stress": 2.690734055354994,
+    "foodcravings": 1.9518652226233453,
+    "indigestion": 1.4235860409145609,
+    "bloating": 1.6702767749699157
+  },
+  "_meta": {
+    "generated_at": "2026-04-19T16:11:13Z",
+    "source_csv": "data\\mcphases_with_estimated_cervical_mucus_v3.csv",
+    "study_interval": 2022,
+    "held_out_excluded": [
+      14,
+      16,
+      20,
+      27,
+      33,
+      44,
+      45,
+      47
+    ],
+    "n_participants": 34,
+    "n_rows_any_symptom": 2495,
+    "rows_by_phase": {
+      "Follicular": 641,
+      "Fertility": 546,
+      "Luteal": 831
+    },
+    "notes": "Means are on the 0-5 ordinal severity scale (to_ordinal). Rows with no symptoms logged are excluded so means reflect the typical severity WHEN a user logs, not diluted-by-missingness."
+  }
+}
